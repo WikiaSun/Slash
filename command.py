@@ -98,7 +98,6 @@ class SlashCommand(commands.Command):
             return await self._parse_slash_arguments(ctx)
 
         # command is being invoked as text command
-        print(ctx.view)
         await super()._parse_arguments(ctx)
 
         # after parsing is done, we need to pass default values
@@ -106,7 +105,6 @@ class SlashCommand(commands.Command):
         # so here we transform these into real default values
         for idx, arg in enumerate(ctx.args):
             if isinstance(arg, Option):
-                print("argument: " + str(arg))
                 if arg.default is ...:
                     param = list(self.params.values())[idx]
                     raise commands.MissingRequiredArgument(param)
