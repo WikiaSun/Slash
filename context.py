@@ -3,18 +3,15 @@ import discord
 from discord.ext import commands
 from contextlib import suppress
 
-class InteractionMessage(discord.InteractionMessage):
-    def __init__(self, *, state, message: discord.Message):
-        for attr in message.__slots__:
-            if not(attr.startswith("_cs")):
-                setattr(self, attr, getattr(message, attr))
-        self._state = state  
+from .message import InteractionMessage
 
 class SlashContext(commands.Context):
     def __init__(self, **attrs):
         with suppress(AttributeError): # a weird hack to bypass the lack of state
             super().__init__(**attrs)
+        self._state = self.bot._connection
         self.interaction: discord.Interaction = attrs.pop("interaction")
+        self.options = None
 
     @property
     def guild(self):

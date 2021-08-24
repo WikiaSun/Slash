@@ -1,7 +1,6 @@
 import asyncio
-from slash.command import SlashCommand
+from slash.command import SlashCommand, SlashGroup
 import discord
-from discord import guild
 from discord.ext import commands
 
 from .context import SlashContext
@@ -38,7 +37,11 @@ class SlashBot(commands.Bot):
                 )
             ]
 
-        payload = [command.to_json() for command in self.commands if not command.hidden and isinstance(command, SlashCommand)]
+        payload = [
+            command.to_json() 
+            for command in self.commands 
+            if not command.hidden and (isinstance(command, SlashCommand) or isinstance(command, SlashGroup))
+        ]
         tasks = [self.http.request(r, json=payload) for r in routes]
         await asyncio.gather(*tasks)
 

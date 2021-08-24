@@ -1,5 +1,10 @@
 import enum
 
+class ApplicationCommandType(enum.Enum):
+    chat_input = 1
+    user = 2
+    message = 3
+
 class ApplicationCommandOptionType(enum.Enum):
     subcommand = 1
     subcommand_group = 2

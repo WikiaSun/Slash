@@ -3,11 +3,12 @@ from collections import defaultdict
 import discord
 from discord.ext import commands
 
-from .enums import ApplicationCommandOptionType
+from .enums import ApplicationCommandOptionType, ApplicationCommandType
 from .context import SlashContext
 
 __all__ = (
     "SlashCommand",
+    "SlashGroup",
     "Option"
 )
 
@@ -25,7 +26,7 @@ ARGUMENT_TYPES.update({
 
 @dataclass
 class Option:
-    name: str = ...
+    name: str = None
     description: str = None
     default: str = ...
 
@@ -64,8 +65,9 @@ class SlashCommand(commands.Command):
         data = ctx.interaction.data
 
         iterator = self._get_args_iterator()
+        options = ctx.options if ctx.options is not None else data.get("options", [])
 
-        for arg in data.get("options", []):
+        for arg in options:
             if arg["type"] in (
                 ApplicationCommandOptionType.string.value,
                 ApplicationCommandOptionType.integer.value,
@@ -123,8 +125,15 @@ class SlashCommand(commands.Command):
         data = {
             "name": self.name,
             "description": self.short_doc,
-            "type": 1
         }
+
+        if len(self.parents) == 0:
+            # this is a top-level command
+            data["type"] = ApplicationCommandType.chat_input.value
+        elif len(self.parents) <= 2:
+            # this is a subcommand
+            data["type"] = ApplicationCommandOptionType.subcommand
+
         options = []
         iterator = self._get_args_iterator()
 
@@ -140,3 +149,48 @@ class SlashCommand(commands.Command):
 
         data["options"] = options
         return data
+
+class SlashGroup(commands.Group):
+    async def _parse_arguments(self, ctx):
+        if not isinstance(ctx, SlashContext):
+            return await super()._parse_arguments(ctx)
+        
+        ctx.args = [ctx] if self.cog is None else [self.cog, ctx]
+        ctx.kwargs = {}
+
+    async def invoke(self, ctx):
+        if not isinstance(ctx, SlashContext):
+            return await super().invoke(ctx)
+        
+        options = ctx.options if ctx.options is not None else ctx.interaction.data.get("options", [])
+        ctx.subcommand_passed = options[0]["name"]
+        ctx.invoked_subcommand = self.all_commands.get(ctx.subcommand_passed)
+
+        if not self.invoke_without_command:
+            await self.prepare(ctx)
+            injected = commands.core.hooked_wrapped_callback(self, ctx, self.callback)
+            await injected(*ctx.args, **ctx.kwargs)
+        
+        ctx.invoked_parents.append(ctx.invoked_with)
+
+        ctx.options = options[0].get("options", [])
+        await ctx.invoked_subcommand.invoke(ctx)
+
+    def to_json(self):
+        data = {
+            "name": self.name,
+            "description": self.short_doc
+        }
+        if len(self.parents) == 0:
+            # this is a top-level group
+            data["type"] = ApplicationCommandType.chat_input.value
+        if len(self.parents) == 1:
+            # this is a group that is nested inside the other group
+            data["type"] = ApplicationCommandOptionType.subcommand_group.value
+        else:
+            raise commands.CommandError("Maximum group depth exceeded")
+
+        data["options"] = [cmd.to_json() for cmd in self.commands]
+        return data
+        
+
