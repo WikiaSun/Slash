@@ -41,6 +41,6 @@ class SlashContext(commands.Context):
         )
         await self.response.send_message(content, **kwargs)
         msg = await task
-        state = discord.interactions._InteractionMessageState(self.interaction, self.bot._connection)
+        state = discord.interactions._InteractionMessageState(self.interaction, self._state)
         msg = InteractionMessage(state=state, message=msg)
         return msg

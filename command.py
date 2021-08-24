@@ -78,10 +78,10 @@ class SlashCommand(commands.Command):
             elif arg["type"] == ApplicationCommandOptionType.user.value:
                 member_data = data["resolved"]["members"][arg["value"]]
                 member_data["user"] = data["resolved"]["users"][arg["value"]]
-                value = discord.Member(data=member_data, state=ctx.bot._connection, guild=ctx.interaction.guild)
+                value = discord.Member(data=member_data, state=ctx._state, guild=ctx.interaction.guild)
             elif arg["type"] == ApplicationCommandOptionType.role.value:
                 role_data = data["resolved"]["roles"][arg["value"]]
-                value = discord.Role(data=role_data, state=ctx.bot._connection, guild=ctx.interaction.guild)
+                value = discord.Role(data=role_data, state=ctx._state, guild=ctx.interaction.guild)
                 
             kwargs[arg["name"]] = value
         
