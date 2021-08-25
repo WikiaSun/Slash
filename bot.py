@@ -4,6 +4,7 @@ import discord
 from discord.ext import commands
 
 from .context import SlashContext
+from .command import SlashCommand
 from .help import MinimalHelpCommand
 
 class SlashBot(commands.Bot):
@@ -17,6 +18,12 @@ class SlashBot(commands.Bot):
         if register_commands_on_startup:
             # this is done because bot's application_id is sent only on_ready
             self.add_listener(self.register_commands, "on_ready")
+
+    def command(self, name=discord.utils.MISSING, cls=SlashCommand, *args, **kwargs):
+        return super().command(name, cls, *args, **kwargs)
+
+    def group(self, name=discord.utils.MISSING, cls=SlashGroup, *args, **kwargs):
+        return super().group(name, cls, *args, **kwargs)
 
     async def register_all_commands(self):
         if self.guild_ids:

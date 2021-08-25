@@ -7,6 +7,8 @@ from .enums import ApplicationCommandOptionType, ApplicationCommandType
 from .context import SlashContext
 
 __all__ = (
+    "command",
+    "group",
     "SlashCommand",
     "SlashGroup",
     "Option"
@@ -193,4 +195,17 @@ class SlashGroup(commands.Group):
         data["options"] = [cmd.to_json() for cmd in self.commands]
         return data
         
+def command(
+    name = discord.utils.MISSING,
+    cls = SlashCommand,
+    **attrs
+):
+    commands.command(name, cls, **attrs)
 
+
+def group(
+    name = discord.utils.MISSING,
+    cls = SlashGroup,
+    **attrs
+):
+    commands.group(name, cls, **attrs)
