@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from collections import defaultdict
+from typing import Union
 import discord
 from discord.ext import commands
 
@@ -122,7 +123,55 @@ class SlashCommand(commands.Command):
                 else:
                     ctx.kwargs[name] = value.default
                 
-                    
+    @property
+    def signature(self) -> str:
+        if self.usage is not None:
+            return self.usage
+
+        params = self.clean_params
+        if not params:
+            return ''
+
+        result = []
+        for name, param in params.items():
+            greedy = isinstance(param.annotation, commands.Greedy)
+            optional = False 
+
+            annotation = param.annotation.converter if greedy else param.annotation
+            origin = getattr(annotation, '__origin__', None)
+            if not greedy and origin is Union:
+                none_cls = type(None)
+                union_args = annotation.__args__
+                optional = union_args[-1] is none_cls
+                if len(union_args) == 2 and optional:
+                    annotation = union_args[0]
+                    origin = getattr(annotation, '__origin__', None)
+
+            # we don't handle literals for slash commands
+            assert isinstance(param.default, Option)
+            if (default := param.default.default) is not ...:
+                should_print = default if isinstance(default, str) else default is not None
+                if should_print:
+                    result.append(f'[{name}={default}]' if not greedy else
+                                  f'[{name}={default}]...')
+                    continue
+                else:
+                    result.append(f'[{name}]')
+
+            elif param.kind == param.VAR_POSITIONAL:
+                if self.require_var_positional:
+                    result.append(f'<{name}...>')
+                else:
+                    result.append(f'[{name}...]')
+            elif greedy:
+                result.append(f'[{name}]...')
+            elif optional:
+                result.append(f'[{name}]')
+            else:
+                result.append(f'<{name}>')
+
+        return ' '.join(result)
+
     def to_json(self):
         data = {
             "name": self.name,
