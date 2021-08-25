@@ -7,10 +7,10 @@ from .message import InteractionMessage
 
 class SlashContext(commands.Context):
     def __init__(self, **attrs):
-        with suppress(AttributeError): # a weird hack to bypass the lack of state
-            super().__init__(**attrs)
-        self._state = self.bot._connection
         self.interaction: discord.Interaction = attrs.pop("interaction")
+        with suppress(AttributeError): # a weird hack to bypass the lack of state
+            super().__init__(message=None, view=None, **attrs)
+        self._state = self.bot._connection
         self.options = None
 
     @property
