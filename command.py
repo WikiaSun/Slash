@@ -249,7 +249,7 @@ def command(
     cls = SlashCommand,
     **attrs
 ):
-    commands.command(name, cls, **attrs)
+    return commands.command(name, cls, **attrs)
 
 
 def group(
@@ -257,4 +257,4 @@ def group(
     cls = SlashGroup,
     **attrs
 ):
-    commands.group(name, cls, **attrs)
+    return commands.group(name, cls, **attrs)
