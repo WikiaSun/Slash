@@ -68,11 +68,14 @@ class SlashBot(commands.Bot):
             self._commands_registered = True
             self.remove_listener(self.register_commands, "on_ready")
 
+    def get_slash_context(self, interaction, *, cls=SlashContext):
+        name = interaction.data["name"]
+        cmd = self.all_commands.get(name)
+        return cls(bot=self, interaction=interaction, prefix="/", command=cmd, invoked_with=name)
+
     async def process_slash_commands(self, interaction: discord.Interaction):
         if interaction.type == discord.InteractionType.application_command:
-            name = interaction.data["name"]
-            cmd = self.all_commands.get(name)
-            ctx = SlashContext(bot=self, interaction=interaction, prefix="/", command=cmd, invoked_with=name)
+            ctx = self.get_slash_context(interaction)
             await self.invoke(ctx)
 
     async def on_interaction(self, interaction: discord.Interaction):
