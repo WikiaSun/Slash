@@ -183,7 +183,7 @@ class SlashCommand(commands.Command):
             data["type"] = ApplicationCommandType.chat_input.value
         elif len(self.parents) <= 2:
             # this is a subcommand
-            data["type"] = ApplicationCommandOptionType.subcommand
+            data["type"] = ApplicationCommandOptionType.subcommand.value
 
         options = []
         iterator = self._get_args_iterator()
@@ -235,7 +235,7 @@ class SlashGroup(commands.Group):
         if len(self.parents) == 0:
             # this is a top-level group
             data["type"] = ApplicationCommandType.chat_input.value
-        if len(self.parents) == 1:
+        elif len(self.parents) == 1:
             # this is a group that is nested inside the other group
             data["type"] = ApplicationCommandOptionType.subcommand_group.value
         else:
