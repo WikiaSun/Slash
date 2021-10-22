@@ -1,6 +1,6 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from collections import defaultdict
-from typing import Union
+from typing import List, Union
 import discord
 from discord.ext import commands
 
@@ -12,7 +12,8 @@ __all__ = (
     "group",
     "SlashCommand",
     "SlashGroup",
-    "Option"
+    "Option",
+    "Choice"
 )
 
 ARGUMENT_TYPES = defaultdict(lambda: ApplicationCommandOptionType.string)
@@ -28,10 +29,22 @@ ARGUMENT_TYPES.update({
 })
 
 @dataclass
+class Choice:
+    name: str
+    value: str
+
+    def to_json(self):
+        return {
+            "name": self.name,
+            "value": self.value
+        }
+
+@dataclass
 class Option:
     name: str = None
     description: str = None
     default: str = ...
+    choices: List[Choice] = field(default_factory=list)
 
     @property
     def required(self):
@@ -208,8 +221,10 @@ class SlashCommand(commands.Command):
                 "name": param.default.name or name,
                 "type": ARGUMENT_TYPES[param.annotation].value,
                 "description": param.default.description,
-                "required": param.default.required
+                "required": param.default.required,
+                "choices": [c.to_json() for c in param.default.choices]
             }
+
             options.append(option)
 
         data["options"] = options
