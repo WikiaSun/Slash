@@ -46,6 +46,19 @@ class Option:
         return arg
 
 class SlashCommand(commands.Command):
+
+    @commands.Command.callback.setter
+    def callback(self, function):
+        super(SlashCommand, type(self)).callback.fset(self, function)
+        
+        self.option_aliases = {}
+        for name, param in self.params.items():
+            if param.default is not param.empty:
+                if (alias := param.default.name) is not None:
+                    self.option_aliases[alias] = name
+                else:
+                    self.option_aliases[name] = name
+
     def _get_args_iterator(self):
         iterator = iter(self.params.items())
         
@@ -86,7 +99,8 @@ class SlashCommand(commands.Command):
                 role_data = data["resolved"]["roles"][arg["value"]]
                 value = discord.Role(data=role_data, state=ctx._state, guild=ctx.interaction.guild)
                 
-            kwargs[arg["name"]] = value
+            arg_name = self.option_aliases[arg["name"]]
+            kwargs[arg_name] = value
         
         # now we need to pass default values to all optional arguments
         # otherwise, an instance of Option will get passed instead
