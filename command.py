@@ -6,6 +6,7 @@ from discord.ext import commands
 
 from .enums import ApplicationCommandOptionType, ApplicationCommandType
 from .context import SlashContext
+from .converter import AutocompleteConverter
 
 __all__ = (
     "command",
@@ -216,7 +217,6 @@ class SlashCommand(commands.Command):
         iterator = self._get_args_iterator()
 
         for name, param in iterator:
-
             option = {
                 "name": param.default.name or name,
                 "type": ARGUMENT_TYPES[param.annotation].value,
@@ -224,6 +224,10 @@ class SlashCommand(commands.Command):
                 "required": param.default.required,
                 "choices": [c.to_json() for c in param.default.choices]
             }
+
+            converter = commands.converter.get_converter(param)
+            if issubclass(converter, AutocompleteConverter):
+                option["autocomplete"] = True
 
             options.append(option)
 

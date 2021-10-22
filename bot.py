@@ -73,10 +73,29 @@ class SlashBot(commands.Bot):
         cmd = self.all_commands.get(name)
         return cls(bot=self, interaction=interaction, prefix="/", command=cmd, invoked_with=name)
 
-    async def process_slash_commands(self, interaction: discord.Interaction):
+    async def handle_autocomplete(self, ctx: SlashContext):
+        await ctx.command._parse_slash_arguments(ctx)
+        options = ctx.options if ctx.options is not None else ctx.interaction.data.get("options", [])
+
+        for arg in options:
+            if arg.get("focused"):
+                param_name = ctx.command.option_aliases[arg["name"]]
+                param = ctx.command.clean_params[param_name]
+                converter = commands.converter.get_converter(param)
+
+                suggestions = await converter().get_suggestions(ctx, ctx.kwargs[param_name])
+                await ctx.interaction.response.send_autocomplete_choices(
+                    [choice.to_json() for choice in suggestions]
+                )
+                break
+
+    async def process_interactions(self, interaction: discord.Interaction):
         if interaction.type == discord.InteractionType.application_command:
             ctx = self.get_slash_context(interaction)
             await self.invoke(ctx)
+        elif interaction.type == discord.InteractionType.application_command_autocomplete:
+            ctx = self.get_slash_context(interaction)
+            await self.handle_autocomplete(ctx)
 
     async def on_interaction(self, interaction: discord.Interaction):
-        await self.process_slash_commands(interaction)
+        await self.process_interactions(interaction)
