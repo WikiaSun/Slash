@@ -29,6 +29,9 @@ class SlashContext(commands.Context):
     def response(self):
         return self.interaction.response
 
+    async def defer(self, ephemeral=False):
+        await self.interaction.response.defer(ephemeral=ephemeral)
+
     async def send(self, content=None, **kwargs):
         if self.interaction.response.is_done():
             return await self.interaction.followup.send(content, **kwargs)
