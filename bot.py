@@ -74,7 +74,7 @@ class SlashBot(commands.Bot):
         return cls(bot=self, interaction=interaction, prefix="/", command=cmd, invoked_with=name)
 
     async def handle_autocomplete(self, ctx: SlashContext):
-        await ctx.command._parse_slash_arguments(ctx)
+        await ctx.command._parse_slash_arguments(ctx, raw=True)
         options = ctx.options if ctx.options is not None else ctx.interaction.data.get("options", [])
 
         for arg in options:

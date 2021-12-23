@@ -89,7 +89,7 @@ class SlashCommand(commands.Command):
 
         return iterator
 
-    async def _parse_slash_arguments(self, ctx):
+    async def _parse_slash_arguments(self, ctx, raw=False):
         args = [ctx] if self.cog is None else [self.cog, ctx]
         kwargs = {}
         data = ctx.interaction.data
@@ -98,22 +98,32 @@ class SlashCommand(commands.Command):
         options = ctx.options if ctx.options is not None else data.get("options", [])
 
         for arg in options:
+            arg_name = self.option_aliases[arg["name"]]
+
             if arg["type"] in (
-                ApplicationCommandOptionType.string.value,
                 ApplicationCommandOptionType.integer.value,
                 ApplicationCommandOptionType.number.value,
                 ApplicationCommandOptionType.boolean.value
             ):
                 value = arg["value"]
+
+            elif arg["type"] == ApplicationCommandOptionType.string.value:
+                if not raw:
+                    param = self.params[arg_name]
+                    converter = commands.converter.get_converter(param)
+                    value = await commands.run_converters(ctx, converter, arg["value"], param)
+                else:
+                    value = arg["value"]
+
             elif arg["type"] == ApplicationCommandOptionType.user.value:
                 member_data = data["resolved"]["members"][arg["value"]]
                 member_data["user"] = data["resolved"]["users"][arg["value"]]
                 value = discord.Member(data=member_data, state=ctx._state, guild=ctx.interaction.guild)
+
             elif arg["type"] == ApplicationCommandOptionType.role.value:
                 role_data = data["resolved"]["roles"][arg["value"]]
                 value = discord.Role(data=role_data, state=ctx._state, guild=ctx.interaction.guild)
                 
-            arg_name = self.option_aliases[arg["name"]]
             kwargs[arg_name] = value
         
         # now we need to pass default values to all optional arguments
