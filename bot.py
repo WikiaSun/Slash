@@ -41,7 +41,6 @@ class SlashBot(commands.Bot):
         guild: Optional[discord.abc.Snowflake] = MISSING, 
         guilds: List[discord.abc.Snowflake] = MISSING
     ) -> None:
-        print("add cog " + repr(cog))
         if self.guild_ids:
             guild = MISSING
             guilds = [discord.Object(g) for g in self.guild_ids]

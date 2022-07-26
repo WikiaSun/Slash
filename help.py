@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-from .command import Option, SlashCommand
 
 __all__ = (
     "SlashHelpCommand",

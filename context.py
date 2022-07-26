@@ -31,6 +31,13 @@ class MessageContext(ContextBase):
         self.interaction = None
         self.responded = asyncio.Event()
 
+    @classmethod
+    def from_commands_context(cls, original: commands.Context):
+        return cls(
+            message=original.message,
+            bot=original.bot
+        )
+
     @property
     def guild(self):
         return self.message.guild
